@@ -3,7 +3,7 @@ import { logger } from 'firebase-functions';
 import { validateAuth, verifyWorkspaceToken, isValidWorkspaceToken } from '../utils/authWorkspace.js';
 import { validateRequiredFields, isSuccess, handleError } from '../utils/validation.js';
 import { createResponseWithTokens } from '../../shared/responses.js';
-import { getCommentRepository } from '../../db/repositories/index.js';
+import { getCommentRepository, getTextRepository } from '../../db/repositories/index.js';
 import { WORKSPACE_ROLES, CreateCommentType, CommentType } from '../../../shared/types.js';
 import { ERRORS, withDetails } from '../../shared/types/errors.js';
 import { databaseUrlProd, jwtWorkspaceSecret } from '../main.js';
@@ -45,7 +45,15 @@ export const createComment = onCall({
     const { workspace_id, workspace_tokens } = validationResult;
     const response = createResponseWithTokens(workspace_tokens);
 
-    // ✅ 4. Validation métier spécifique
+    // ✅ 4. Vérifier que le texte existe avant de créer le commentaire
+    const existingText = await getTextRepository().getById(textId, workspace_id);
+    if (!existingText) {
+      return response.error(withDetails(ERRORS.NOT_FOUND, {
+        message: 'Le texte associé n\'existe pas'
+      }));
+    }
+
+    // ✅ 5. Validation métier spécifique
     const commentValidation = validateCommentData({ text_id: textId, content });
     if (!commentValidation.valid) {
       return response.error(withDetails(ERRORS.INVALID_INPUT, {
@@ -54,7 +62,7 @@ export const createComment = onCall({
       }));
     }
 
-    // ✅ 5. Logique métier via repository
+    // ✅ 6. Logique métier via repository
     const commentData: CreateCommentType = {
       text_id: textId,
       content: content.trim(),
@@ -63,10 +71,13 @@ export const createComment = onCall({
     
     const newComment = await getCommentRepository().create(workspace_id, commentData);
 
-    // ✅ 6. Logging succès
-    logger.info(`Commentaire créé avec succès pour workspace ${workspace_id} par ${uid}`);
+    // ✅ 7. Logging succès
+    logger.info(`Commentaire créé avec succès pour workspace ${workspace_id} par ${uid}`, {
+      commentId: newComment.id,
+      textId: textId
+    });
 
-    // ✅ 7. Réponse standardisée
+    // ✅ 8. Réponse standardisée
     return response.success({ comment: newComment });
     
   } catch (error) {
