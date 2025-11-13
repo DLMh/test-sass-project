@@ -22,8 +22,27 @@ const auth = getAuth(app);
 // 🔧 TOUJOURS en mode développement local (émulateurs)
 const functions = getFunctions(app, 'us-central1');
 
-// 🔧 TOUJOURS connecté aux émulateurs locaux
-connectAuthEmulator(auth, 'http://127.0.0.1:9099');
-connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+// ✅ Connexion aux émulateurs uniquement si disponibles (évite erreurs si non démarrés)
+if (typeof window !== 'undefined') {
+  // Connexion Auth Emulator avec gestion d'erreur
+  try {
+    connectAuthEmulator(auth, 'http://127.0.0.1:9099', { disableWarnings: true });
+  } catch (error: any) {
+    // Ignorer l'erreur si l'émulateur est déjà connecté
+    if (!error?.message?.includes('already been called')) {
+      console.warn('⚠️ Émulateur Auth Firebase non disponible:', error);
+    }
+  }
+
+  // Connexion Functions Emulator avec gestion d'erreur
+  try {
+    connectFunctionsEmulator(functions, '127.0.0.1', 5001);
+  } catch (error: any) {
+    // Ignorer l'erreur si l'émulateur est déjà connecté
+    if (!error?.message?.includes('already been called')) {
+      console.warn('⚠️ Émulateur Functions Firebase non disponible:', error);
+    }
+  }
+}
 
 export { app, auth, functions }; 

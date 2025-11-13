@@ -3,7 +3,8 @@ export const QUERY_KEYS_STRINGS = {
   WORKSPACE: 'workspace',
   SESSIONS: 'sessions',
   MESSAGES: 'messages',
-  TEXTS: 'texts'
+  TEXTS: 'texts',
+  COMMENTS: 'comments'
 }
 
 export const queryKeys = {
@@ -19,5 +20,10 @@ export const queryKeys = {
   texts: {
     all: (workspaceId: string) => [QUERY_KEYS_STRINGS.TEXTS, workspaceId] as const,
     detail: (id: string) => [QUERY_KEYS_STRINGS.TEXTS, id] as const
+  },
+  comments: {
+    all: (workspaceId: string) => [QUERY_KEYS_STRINGS.COMMENTS, workspaceId] as const,
+    byText: (workspaceId: string, textId: string) => [QUERY_KEYS_STRINGS.COMMENTS, workspaceId, 'text', textId] as const,
+    detail: (id: string) => [QUERY_KEYS_STRINGS.COMMENTS, id] as const
   }
 }; 

@@ -18,12 +18,13 @@ export const auth = getAuth(app);
 //configuration pour us-central1 le mode développement
 // car celui-ci marche uniquement aux us-central1
 setGlobalOptions({
-  region: "us-central",
-  concurrency: 1,
+  region: "us-central1",
+  concurrency: 1
 });
 
 export const serverToken = defineSecret('SERVER_API_AGENT_TOKEN');
 export const jwtWorkspaceSecret = defineSecret('JWT_WORKSPACE_SECRET');
+export const databaseUrlProd = defineSecret('DATABASE_URL_PROD');
 
 
 export const SERVICE_URL = {

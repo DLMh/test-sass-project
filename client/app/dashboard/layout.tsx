@@ -2,8 +2,8 @@
 
 import React from 'react';
 import ProtectedLayout from './protected-layout';
-import { WorkspaceProvider } from '@/contexts/WorkspaceContext';
-import { ChatParamsProvider } from '@/contexts/ChatParamsContext';
+import { WorkspaceProvider } from '../../contexts/WorkspaceContext';
+import { ChatParamsProvider } from '../../contexts/ChatParamsContext';
 
 
 export default function DashboardLayout({

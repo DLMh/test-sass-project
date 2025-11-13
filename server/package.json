@@ -2,12 +2,12 @@
   "name": "server",
   "scripts": {
     "lint": "exit 0",
-    "build": "tsc --noEmit --strict && echo 'Build TypeScript check'",
-    "build:watch": "echo 'Build watch simulé' && exit 0",
+    "build": "tsc",
+    "build:watch": "tsc --watch",
     "shell": "echo 'Shell simulé' && exit 0",
     "start": "echo 'Start simulé' && exit 0",
-    "deploy": "bash ../scripts/deploy.sh",
-    "dev": "bash ../scripts/deploy.sh"
+    "deploy": "node -e \"console.log('🔧 VERSION DEMO - Script deploy simplifié')\"",
+    "dev": "node -e \"console.log('🔧 VERSION DEMO - Script dev simplifié. Utilisez: firebase emulators:start')\""
   },
   "engines": {
     "node": "22"

@@ -1,32 +1,16 @@
-import { Pool } from 'pg';
-import { getPool } from '../config.js';
+import { getPool, MockPool } from '../config.js';
+import { TextType, CreateTextType } from '../../../shared/types.js';
 
 /**
  * Repository pour la gestion des textes
- * 🔧 VERSION DEMO - Repository de test pour les textes
+ * Mode test : Utilise un stockage en mémoire (simulé)
  */
 
-export interface TextType {
-  id: string;
-  workspace_id: string;
-  title: string;
-  content: string;
-  created_by: string;
-  created_at: Date;
-  updated_at: Date;
-}
-
-export interface CreateTextType {
-  title: string;
-  content: string;
-  created_by: string;
-}
-
 export class TextRepository {
-  private pool: Pool;
+  private pool: MockPool;
 
   constructor() {
-    this.pool = getPool(); // ✅ Pool PostgreSQL
+    this.pool = getPool(); // ✅ Pool en mémoire (simulé)
   }
 
   // ✅ Méthodes avec isolation workspace

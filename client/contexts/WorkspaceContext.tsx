@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useState, useEffect } from 'react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from './AuthContext';
 
 // ========================== INTERFACES ==========================
 
@@ -30,29 +30,37 @@ const WORKSPACE_CACHE_KEY = 'agentova_selected_workspace';
 
 // ========================== DONNÉES FANTÔMES ==========================
 
+// ✅ Dates fixes pour éviter les différences d'hydratation entre serveur et client
+const FIXED_DATE_1 = new Date('2024-01-01T00:00:00.000Z');
+const FIXED_DATE_2 = new Date('2024-01-15T00:00:00.000Z');
+const FIXED_DATE_NOW = new Date('2024-01-20T00:00:00.000Z');
+
 const MOCK_WORKSPACES: Workspace[] = [
   {
     id: 'demo-workspace-123',
     name: 'Workspace Demo',
     color: '#3B82F6',
     owner_id: 'demo-user-123',
-    created_at: new Date('2024-01-01'),
-    updated_at: new Date()
+    created_at: FIXED_DATE_1,
+    updated_at: FIXED_DATE_NOW
   },
   {
     id: 'demo-workspace-456',
     name: 'Test Workspace',
     color: '#10B981',
     owner_id: 'demo-user-123',
-    created_at: new Date('2024-01-15'),
-    updated_at: new Date()
+    created_at: FIXED_DATE_2,
+    updated_at: FIXED_DATE_NOW
   }
 ];
 
 // ========================== PROVIDER ==========================
 
 export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
-  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string | null>(null);
+  // ✅ État initial stable pour éviter les erreurs d'hydratation
+  // Utiliser le premier workspace par défaut au lieu de null
+  const [currentWorkspaceId, setCurrentWorkspaceId] = useState<string>(MOCK_WORKSPACES[0].id);
+  const [isMounted, setIsMounted] = useState(false);
   const { user, isAuthenticated } = useAuth();
 
   // ✅ FONCTION FANTÔME - Sauvegarder workspace en cache
@@ -88,9 +96,16 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
     return MOCK_WORKSPACES;
   };
 
-  // ✅ INITIALISATION AUTOMATIQUE
+  // ✅ Marquer comme monté après hydratation
   useEffect(() => {
-    if (isAuthenticated && !currentWorkspaceId) {
+    setIsMounted(true);
+  }, []);
+
+  // ✅ INITIALISATION AUTOMATIQUE (après hydratation uniquement)
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    if (isAuthenticated) {
       console.log('🔄 [DEMO] Initialisation workspace automatique...');
       
       // Essayer de récupérer depuis le cache
@@ -107,12 +122,10 @@ export function WorkspaceProvider({ children }: { children: React.ReactNode }) {
         console.log('✅ [DEMO] Workspace par défaut sélectionné:', defaultWorkspace.id);
       }
     }
-  }, [isAuthenticated, currentWorkspaceId]);
+  }, [isAuthenticated, isMounted]);
 
-  // ✅ CALCUL DU WORKSPACE ACTUEL
-  const currentWorkspace = currentWorkspaceId 
-    ? MOCK_WORKSPACES.find(w => w.id === currentWorkspaceId) || MOCK_WORKSPACES[0]
-    : MOCK_WORKSPACES[0];
+  // ✅ CALCUL DU WORKSPACE ACTUEL (toujours une valeur stable)
+  const currentWorkspace = MOCK_WORKSPACES.find(w => w.id === currentWorkspaceId) || MOCK_WORKSPACES[0];
 
   // ✅ VALEUR DU CONTEXTE
   const contextValue: WorkspaceProviderState = {

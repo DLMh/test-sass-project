@@ -1,0 +1,24 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Styles globaux pour l'application */
+@layer base {
+  html {
+    @apply antialiased;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+}
+
+/* Styles personnalisés si nécessaire */
+@layer components {
+  /* Ajoutez vos composants personnalisés ici si nécessaire */
+}
+
+@layer utilities {
+  /* Ajoutez vos utilitaires personnalisés ici si nécessaire */
+}
+

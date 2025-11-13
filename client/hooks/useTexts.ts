@@ -1,8 +1,8 @@
 import { useCallback } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useWorkspaceContext } from '@/contexts/WorkspaceContext';
-import { TextService, TextType, CreateTextRequest } from '@/services/api/textService';
-import { queryKeys } from '@/query/queryKeys';
+import { useWorkspaceContext } from '../contexts/WorkspaceContext';
+import { TextService, TextType, CreateTextRequest } from '../services/api/textService';
+import { queryKeys } from '../query/queryKeys';
 
 /**
  * Hook pour la gestion des textes
@@ -25,8 +25,7 @@ export function useTexts() {
   // ✅ Mutation création avec gestion cache
   const createMutation = useMutation({
     mutationFn: (data: CreateTextRequest) => {
-      const textService = new TextService();
-      return textService.createText(currentWorkspaceId, data);
+      return TextService.createText(currentWorkspaceId, data);
     },
     onSuccess: (newText) => {
       // Ajouter le nouveau texte au cache

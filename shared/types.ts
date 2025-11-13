@@ -30,6 +30,24 @@ export interface CreateTextType {
   created_by: string;
 }
 
+// ========================== TYPES COMMENTAIRES ==============================
+
+export interface CommentType {
+  id: string;
+  workspace_id: string;
+  text_id: string;
+  content: string;
+  created_by: string;
+  created_at: Date;
+  updated_at: Date;
+}
+
+export interface CreateCommentType {
+  text_id: string;
+  content: string;
+  created_by: string;
+}
+
 // ========================== TYPES MESSAGES (pour le chat) ==============================
 
 export interface MessageFileInline {

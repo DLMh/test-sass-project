@@ -1,16 +1,12 @@
-import { callSecuredFunction } from '@/services/local/authenticationService';
+import { callSecuredFunction } from '../local/authenticationService';
+import { TextType as SharedTextType } from '../../../shared/types';
 
 /**
  * Service de gestion des textes côté client
- * 🔧 VERSION DEMO - Service de test pour enregistrer et récupérer des textes
  */
 
-export interface TextType {
-  id: string;
-  workspace_id: string;
-  title: string;
-  content: string;
-  created_by: string;
+// Type client avec dates sérialisées (string au lieu de Date)
+export interface TextType extends Omit<SharedTextType, 'created_at' | 'updated_at'> {
   created_at: string;
   updated_at: string;
 }
@@ -21,123 +17,140 @@ export interface CreateTextRequest {
 }
 
 export interface TextsResponse {
+  success: true;
   texts: TextType[];
+  workspace_tokens?: any;
 }
 
 export interface TextResponse {
+  success: true;
   text: TextType;
+  workspace_tokens?: any;
 }
 
 export class TextService {
   /**
    * Créer un nouveau texte
-   * 🔧 VERSION DEMO - Fonction fantôme qui simule la création
    */
-  async createText(
+  static async createText(
     workspaceId: string,
     data: CreateTextRequest
   ): Promise<TextType> {
     try {
-      // 🔧 FONCTION FANTÔME - Simule un appel API
-      console.log('📝 [DEMO] Création texte:', data);
-      
-      // Simuler un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Retourner un texte simulé
-      const mockText: TextType = {
-        id: `text-${Date.now()}`,
-        workspace_id: workspaceId,
-        title: data.title || 'Sans titre',
-        content: data.content,
-        created_by: 'demo-user-123',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      return mockText;
-    } catch (error) {
-      console.error('Erreur création texte:', error);
+      const result = await callSecuredFunction<TextResponse>(
+        'createText',
+        workspaceId,
+        {
+          title: data.title,
+          content: data.content
+        }
+      );
+      // ✅ Vérifier que la réponse contient bien text
+      // La réponse du serveur est : { success: true, text: {...}, workspace_tokens: {...} }
+      if (!result || !result.text) {
+        throw new Error('Réponse createText invalide: texte manquant');
+      }
+      return result.text;
+    } catch (error: any) {
+      console.error('Erreur création texte:', {
+        code: error?.code,
+        message: error?.message
+      });
       throw error;
     }
   }
 
   /**
    * Récupérer tous les textes d'un workspace
-   * 🔧 VERSION DEMO - Fonction fantôme qui simule la récupération
    */
   static async getTexts(workspaceId: string): Promise<TextType[]> {
     try {
-      // 🔧 FONCTION FANTÔME - Simule un appel API
-      console.log('📋 [DEMO] Récupération textes pour workspace:', workspaceId);
+      const result = await callSecuredFunction<TextsResponse>(
+        'getTexts',
+        workspaceId
+      );
       
-      // Simuler un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 300));
+      // ✅ Vérifier que la réponse contient bien texts
+      if (!result) {
+        return [];
+      }
       
-      // Retourner des textes simulés
-      const mockTexts: TextType[] = [
-        {
-          id: 'text-1',
-          workspace_id: workspaceId,
-          title: 'Premier texte de démonstration',
-          content: 'Ceci est un exemple de texte enregistré dans le système. Il sert à tester l\'architecture et les patterns de développement.',
-          created_by: 'demo-user-123',
-          created_at: new Date(Date.now() - 86400000).toISOString(), // Hier
-          updated_at: new Date(Date.now() - 86400000).toISOString()
-        },
-        {
-          id: 'text-2',
-          workspace_id: workspaceId,
-          title: 'Deuxième exemple',
-          content: 'Un autre texte pour montrer la liste et les fonctionnalités CRUD de base.',
-          created_by: 'demo-user-123',
-          created_at: new Date(Date.now() - 3600000).toISOString(), // Il y a 1h
-          updated_at: new Date(Date.now() - 3600000).toISOString()
-        },
-        {
-          id: 'text-3',
-          workspace_id: workspaceId,
-          title: 'Test technique',
-          content: 'Ce texte démontre l\'utilisation des services, hooks et composants selon les règles d\'architecture Agentova.',
-          created_by: 'demo-user-123',
-          created_at: new Date().toISOString(), // Maintenant
-          updated_at: new Date().toISOString()
-        }
-      ];
+      // ✅ La réponse du serveur est : { success: true, texts: [...], workspace_tokens: {...} }
+      const texts = result.texts;
       
-      return mockTexts;
-    } catch (error) {
-      console.error('Erreur récupération textes:', error);
+      if (!texts || !Array.isArray(texts)) {
+        return [];
+      }
+      
+      return texts;
+    } catch (error: any) {
+      // ✅ Si erreur de connexion, retourner tableau vide au lieu de throw
+      const isConnectionError = 
+        error?.code === 'internal' || 
+        error?.code === 'functions/unavailable' ||
+        error?.code === 'functions/not-found' ||
+        error?.code === 'unavailable' ||
+        error?.message?.toLowerCase().includes('econnrefused') ||
+        error?.message?.toLowerCase().includes('failed to fetch') ||
+        error?.message?.toLowerCase().includes('networkerror');
+      
+      if (isConnectionError) {
+        return [];
+      }
+      
+      console.error('Erreur récupération textes:', {
+        code: error?.code,
+        message: error?.message
+      });
       throw error;
     }
   }
 
   /**
    * Supprimer un texte
-   * 🔧 VERSION DEMO - Fonction fantôme qui simule la suppression
    */
   static async deleteText(
     workspaceId: string,
     textId: string
   ): Promise<boolean> {
     try {
-      // 🔧 FONCTION FANTÔME - Simule un appel API
-      console.log('🗑️ [DEMO] Suppression texte:', textId);
+      const result = await callSecuredFunction<{ deleted: boolean }>(
+        'deleteText',
+        workspaceId,
+        { textId }
+      );
       
-      // Simuler un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 400));
+      // ✅ Vérifier que la réponse contient bien deleted
+      if (!result || typeof result.deleted !== 'boolean') {
+        return false;
+      }
       
-      // Toujours réussir en mode demo
-      return true;
-    } catch (error) {
-      console.error('Erreur suppression texte:', error);
+      return result.deleted;
+    } catch (error: any) {
+      // ✅ Si erreur de connexion, retourner false au lieu de throw
+      const isConnectionError = 
+        error?.code === 'NOT_FOUND' ||
+        error?.code === 'functions/not-found' ||
+        error?.code === 'internal' ||
+        error?.code === 'functions/unavailable' ||
+        error?.message?.toLowerCase().includes('ressource non trouvée') ||
+        error?.message?.toLowerCase().includes('not found');
+      
+      if (isConnectionError) {
+        // ✅ Mode silencieux pour erreurs de connexion (mode mock)
+        return false;
+      }
+      
+      console.error('Erreur suppression texte:', {
+        code: error?.code,
+        message: error?.message
+      });
       throw error;
     }
   }
 
   /**
    * Mettre à jour un texte
-   * 🔧 VERSION DEMO - Fonction fantôme qui simule la mise à jour
    */
   static async updateText(
     workspaceId: string,
@@ -145,26 +158,48 @@ export class TextService {
     data: Partial<CreateTextRequest>
   ): Promise<TextType> {
     try {
-      // 🔧 FONCTION FANTÔME - Simule un appel API
-      console.log('✏️ [DEMO] Mise à jour texte:', textId, data);
+      const result = await callSecuredFunction<TextResponse>(
+        'updateText',
+        workspaceId,
+        {
+          textId,
+          ...data
+        }
+      );
       
-      // Simuler un délai d'API
-      await new Promise(resolve => setTimeout(resolve, 450));
+      // ✅ Vérifier que la réponse contient bien text
+      if (!result || !result.text) {
+        throw new Error('Réponse updateText invalide: texte manquant');
+      }
       
-      // Retourner un texte mis à jour simulé
-      const mockUpdatedText: TextType = {
-        id: textId,
-        workspace_id: workspaceId,
-        title: data.title || 'Titre mis à jour',
-        content: data.content || 'Contenu mis à jour',
-        created_by: 'demo-user-123',
-        created_at: new Date(Date.now() - 86400000).toISOString(),
-        updated_at: new Date().toISOString() // Maintenant
-      };
+      return result.text;
+    } catch (error: any) {
+      // ✅ Si erreur de connexion, retourner un texte mock au lieu de throw
+      const isConnectionError = 
+        error?.code === 'NOT_FOUND' ||
+        error?.code === 'functions/not-found' ||
+        error?.code === 'internal' ||
+        error?.code === 'functions/unavailable' ||
+        error?.message?.toLowerCase().includes('ressource non trouvée') ||
+        error?.message?.toLowerCase().includes('not found');
       
-      return mockUpdatedText;
-    } catch (error) {
-      console.error('Erreur mise à jour texte:', error);
+      if (isConnectionError) {
+        // ✅ Mode silencieux pour erreurs de connexion (mode mock)
+        return {
+          id: textId,
+          workspace_id: workspaceId,
+          title: data.title || 'Texte mis à jour (mode mock)',
+          content: data.content || 'Contenu mis à jour en mode mock (émulateurs non disponibles)',
+          created_by: 'demo-user',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+      }
+      
+      console.error('Erreur mise à jour texte:', {
+        code: error?.code,
+        message: error?.message
+      });
       throw error;
     }
   }

@@ -28,29 +28,32 @@ interface MockUser {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  // États simplifiés pour la démo
-  const [user, setUser] = useState<MockUser | null>(null);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoadingForLogin, setIsLoadingForLogin] = useState(true);
-  const [isInitializing, setIsInitializing] = useState(true);
+  // ✅ États initiaux stables pour éviter les erreurs d'hydratation
+  const mockUser: MockUser = {
+    uid: 'demo-user-123',
+    email: 'demo@agentova.ai',
+    displayName: 'Utilisateur Demo'
+  };
+
+  const [user, setUser] = useState<MockUser | null>(mockUser);
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
+  const [isLoadingForLogin, setIsLoadingForLogin] = useState(false);
+  const [isInitializing, setIsInitializing] = useState(false);
   const [isInitializationStuck, setIsInitializationStuck] = useState(false);
   
   const router = useRouter();
   const pathname = usePathname();
 
-  // ✅ FONCTION VIDE - Auto-login immédiat
+  // ✅ Initialisation après hydratation (pour éviter les différences SSR/client)
   useEffect(() => {
-    // 🔧 FONCTION VIDE - Connexion immédiate sans délai
-    const mockUser: MockUser = {
-      uid: 'demo-user-123',
-      email: 'demo@agentova.ai',
-      displayName: 'Utilisateur Demo'
-    };
-    
-    setUser(mockUser);
-    setIsAuthenticated(true);
-    setIsLoadingForLogin(false);
-    setIsInitializing(false);
+    // S'assurer que l'état est cohérent après hydratation
+    if (!user) {
+      setUser(mockUser);
+      setIsAuthenticated(true);
+      setIsLoadingForLogin(false);
+      setIsInitializing(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // ✅ FONCTION VIDE - Login automatique
